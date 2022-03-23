@@ -1,30 +1,33 @@
 // useDebugValue: useMedia
 // 💯 use the format function
-// http://localhost:3000/isolated/final/06.extra-1.js
+// http://localhost:3000/isolated/final/06.extra-1.tsx
 
 import * as React from 'react'
 
 const formatDebugValue = ({query, state}) => `\`${query}\` => ${state}`
 
-function useMedia(query, initialState = false) {
+function useMedia(query: string, initialState = false) {
   const [state, setState] = React.useState(initialState)
   React.useDebugValue({query, state}, formatDebugValue)
 
   React.useEffect(() => {
-    let mounted = true
+    let current = true
     const mql = window.matchMedia(query)
     function onChange() {
-      if (!mounted) {
+      if (!current) {
         return
       }
       setState(Boolean(mql.matches))
     }
 
+    // unfortunately, there's no polyfill for addEventListener on media queries
+    // which we need for our jsdom-based tests. So we're using addListener here
     mql.addListener(onChange)
     setState(mql.matches)
 
     return () => {
-      mounted = false
+      current = false
+      // same issue with the removeListener as well
       mql.removeListener(onChange)
     }
   }, [query])

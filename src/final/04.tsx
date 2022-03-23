@@ -1,5 +1,5 @@
 // useLayoutEffect: auto-scrolling textarea
-// http://localhost:3000/isolated/final/04.js
+// http://localhost:3000/isolated/final/04.tsx
 
 import * as React from 'react'
 

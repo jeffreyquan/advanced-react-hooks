@@ -1,5 +1,5 @@
 // useImperativeHandle: scroll to top/bottom
-// http://localhost:3000/isolated/exercise/05.js
+// http://localhost:3000/isolated/exercise/05.tsx
 
 import * as React from 'react'
 

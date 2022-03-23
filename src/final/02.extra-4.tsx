@@ -1,6 +1,6 @@
 // useCallback: custom hooks
-// 💯 return a memoized `run` function from useAsync
-// http://localhost:3000/isolated/final/02.extra-2.tsx
+// 💯 abort unused requests
+// http://localhost:3000/isolated/final/02.extra-4.tsx
 
 import * as React from 'react'
 import {
@@ -17,28 +17,32 @@ type AsyncState<DataType> =
       status: 'idle'
       data?: null
       error?: null
+      promise?: null
     }
   | {
       status: 'pending'
       data?: null
       error?: null
+      promise: Promise<DataType>
     }
   | {
       status: 'resolved'
       data: DataType
       error: null
+      promise: null
     }
   | {
       status: 'rejected'
       data: null
       error: Error
+      promise: null
     }
 
 type AsyncAction<DataType> =
   | {type: 'reset'}
-  | {type: 'pending'}
-  | {type: 'resolved'; data: DataType}
-  | {type: 'rejected'; error: Error}
+  | {type: 'pending'; promise: Promise<DataType>}
+  | {type: 'resolved'; data: DataType; promise: Promise<DataType>}
+  | {type: 'rejected'; error: Error; promise: Promise<DataType>}
 
 function asyncReducer<DataType>(
   state: AsyncState<DataType>,
@@ -46,13 +50,25 @@ function asyncReducer<DataType>(
 ): AsyncState<DataType> {
   switch (action.type) {
     case 'pending': {
-      return {status: 'pending', data: null, error: null}
+      return {
+        status: 'pending',
+        data: null,
+        error: null,
+        promise: action.promise,
+      }
     }
     case 'resolved': {
-      return {status: 'resolved', data: action.data, error: null}
+      if (action.promise !== state.promise) return state
+      return {status: 'resolved', data: action.data, error: null, promise: null}
     }
     case 'rejected': {
-      return {status: 'rejected', data: null, error: action.error}
+      if (action.promise !== state.promise) return state
+      return {
+        status: 'rejected',
+        data: null,
+        error: action.error,
+        promise: null,
+      }
     }
     default: {
       throw new Error(`Unhandled action type: ${action.type}`)
@@ -72,13 +88,13 @@ function useAsync<DataType>() {
   const {data, error, status} = state
 
   const run = React.useCallback((promise: Promise<DataType>) => {
-    dispatch({type: 'pending'})
+    dispatch({type: 'pending', promise})
     promise.then(
       data => {
-        dispatch({type: 'resolved', data})
+        dispatch({type: 'resolved', data, promise})
       },
       error => {
-        dispatch({type: 'rejected', error})
+        dispatch({type: 'rejected', error, promise})
       },
     )
   }, [])
@@ -98,7 +114,11 @@ function PokemonInfo({pokemonName}: {pokemonName: string}) {
     if (!pokemonName) {
       return
     }
-    run(fetchPokemon(pokemonName))
+    const abortController = new AbortController()
+    run(fetchPokemon(pokemonName, {signal: abortController.signal}))
+    return () => {
+      abortController.abort()
+    }
   }, [pokemonName, run])
 
   switch (status) {

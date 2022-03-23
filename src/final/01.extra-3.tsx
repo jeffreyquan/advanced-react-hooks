@@ -1,10 +1,14 @@
 // useReducer: simple Counter
 // 💯 simulate setState with an object OR function
-// http://localhost:3000/isolated/final/01.extra-3.js
+// http://localhost:3000/isolated/final/01.extra-3.tsx
 
 import * as React from 'react'
 
-const countReducer = (state, action) => ({
+type State = {count: number}
+const countReducer = (
+  state: State,
+  action: State | ((currentState: State) => State),
+) => ({
   ...state,
   ...(typeof action === 'function' ? action(state) : action),
 })
@@ -16,7 +20,15 @@ function Counter({initialCount = 0, step = 1}) {
   const {count} = state
   const increment = () =>
     setState(currentState => ({count: currentState.count + step}))
-  return <button onClick={increment}>{count}</button>
+  const decrement = () =>
+    setState(currentState => ({count: currentState.count - step}))
+  return (
+    <div className="counter">
+      <button onClick={decrement}>⬅️</button>
+      {count}
+      <button onClick={increment}>➡️</button>
+    </div>
+  )
 }
 
 function App() {

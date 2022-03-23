@@ -1,5 +1,5 @@
 // useContext: simple Counter
-// http://localhost:3000/isolated/final/03.js
+// http://localhost:3000/isolated/final/03.tsx
 
 import * as React from 'react'
 

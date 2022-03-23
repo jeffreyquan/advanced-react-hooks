@@ -1,9 +1,6 @@
 // useContext: Caching response data in context
 // 💯 caching in a context provider (exercise)
-// http://localhost:3000/isolated/exercise/03.extra-2.js
-
-// you can edit this here and look at the isolated page or you can copy/paste
-// this in the regular exercise file.
+// http://localhost:3000/isolated/exercise/03.extra-2.tsx
 
 import * as React from 'react'
 import {
@@ -23,9 +20,23 @@ import {useAsync} from '../utils'
 // 💰 you can grab the one that's in PokemonInfo
 // 🐨 return your context provider with the value assigned to what you get back from useReducer
 // 💰 value={[cache, dispatch]}
+// 🦺 because this is the value we're passing to the provider, you'll want to
+// create a type that matches this value which you'll pass to the createContext
+// generic above
 // 💰 make sure you forward the props.children!
 
-function pokemonCacheReducer(state, action) {
+type PokemonCacheState = Record<string, PokemonData>
+
+type PokemonCacheAction = {
+  type: 'ADD_POKEMON'
+  pokemonName: string
+  pokemonData: PokemonData
+}
+
+function pokemonCacheReducer(
+  state: PokemonCacheState,
+  action: PokemonCacheAction,
+) {
   switch (action.type) {
     case 'ADD_POKEMON': {
       return {...state, [action.pokemonName]: action.pokemonData}
@@ -34,6 +45,24 @@ function pokemonCacheReducer(state, action) {
       throw new Error(`Unhandled action type: ${action.type}`)
     }
   }
+}
+
+function PokemonSection({onSelect, pokemonName}) {
+  // 🐨 wrap this in the PokemonCacheProvider so the PreviousPokemon
+  // and PokemonInfo components have access to that context.
+  return (
+    <div style={{display: 'flex'}}>
+      <PreviousPokemon onSelect={onSelect} />
+      <div className="pokemon-info" style={{marginLeft: 10}}>
+        <PokemonErrorBoundary
+          onReset={() => onSelect('')}
+          resetKeys={[pokemonName]}
+        >
+          <PokemonInfo pokemonName={pokemonName} />
+        </PokemonErrorBoundary>
+      </div>
+    </div>
+  )
 }
 
 function PokemonInfo({pokemonName}: {pokemonName: string}) {
@@ -72,7 +101,7 @@ function PokemonInfo({pokemonName}: {pokemonName: string}) {
   }
 }
 
-function PreviousPokemon({onSelect}) {
+function PreviousPokemon({onSelect}: {onSelect: (name: string) => void}) {
   // 🐨 get the cache from useContext with PokemonCacheContext
   const cache = {}
   return (
@@ -94,32 +123,14 @@ function PreviousPokemon({onSelect}) {
   )
 }
 
-function PokemonSection({onSelect, pokemonName}) {
-  // 🐨 wrap this in the PokemonCacheProvider so the PreviousPokemon
-  // and PokemonInfo components have access to that context.
-  return (
-    <div style={{display: 'flex'}}>
-      <PreviousPokemon onSelect={onSelect} />
-      <div className="pokemon-info" style={{marginLeft: 10}}>
-        <PokemonErrorBoundary
-          onReset={() => onSelect('')}
-          resetKeys={[pokemonName]}
-        >
-          <PokemonInfo pokemonName={pokemonName} />
-        </PokemonErrorBoundary>
-      </div>
-    </div>
-  )
-}
-
 function App() {
   const [pokemonName, setPokemonName] = React.useState(null)
 
-  function handleSubmit(newPokemonName) {
+  function handleSubmit(newPokemonName: string) {
     setPokemonName(newPokemonName)
   }
 
-  function handleSelect(newPokemonName) {
+  function handleSelect(newPokemonName: string) {
     setPokemonName(newPokemonName)
   }
 

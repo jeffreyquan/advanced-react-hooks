@@ -1,6 +1,6 @@
 // useCallback: custom hooks
 // 💯 use useCallback to empower the user to customize memoization
-// http://localhost:3000/isolated/final/02.extra-1.js
+// http://localhost:3000/isolated/final/02.extra-1.tsx
 
 import * as React from 'react'
 import {
@@ -11,7 +11,38 @@ import {
   PokemonErrorBoundary,
 } from '../pokemon'
 
-function asyncReducer(state, action) {
+type AsyncState<DataType> =
+  | {
+      status: 'idle'
+      data?: null
+      error?: null
+    }
+  | {
+      status: 'pending'
+      data?: null
+      error?: null
+    }
+  | {
+      status: 'resolved'
+      data: DataType
+      error: null
+    }
+  | {
+      status: 'rejected'
+      data: null
+      error: Error
+    }
+
+type AsyncAction<DataType> =
+  | {type: 'reset'}
+  | {type: 'pending'}
+  | {type: 'resolved'; data: DataType}
+  | {type: 'rejected'; error: Error}
+
+function asyncReducer<DataType>(
+  state: AsyncState<DataType>,
+  action: AsyncAction<DataType>,
+): AsyncState<DataType> {
   switch (action.type) {
     case 'pending': {
       return {status: 'pending', data: null, error: null}
@@ -28,12 +59,13 @@ function asyncReducer(state, action) {
   }
 }
 
-function useAsync(asyncCallback, initialState) {
-  const [state, dispatch] = React.useReducer(asyncReducer, {
+function useAsync<DataType>(asyncCallback: () => Promise<DataType> | null) {
+  const [state, dispatch] = React.useReducer<
+    React.Reducer<AsyncState<DataType>, AsyncAction<DataType>>
+  >(asyncReducer, {
     status: 'idle',
     data: null,
     error: null,
-    ...initialState,
   })
   React.useEffect(() => {
     const promise = asyncCallback()
@@ -61,9 +93,7 @@ function PokemonInfo({pokemonName}: {pokemonName: string}) {
     return fetchPokemon(pokemonName)
   }, [pokemonName])
 
-  const state = useAsync(asyncCallback, {
-    status: pokemonName ? 'pending' : 'idle',
-  })
+  const state = useAsync(asyncCallback)
   const {data: pokemon, status, error} = state
 
   switch (status) {
@@ -83,7 +113,7 @@ function PokemonInfo({pokemonName}: {pokemonName: string}) {
 function App() {
   const [pokemonName, setPokemonName] = React.useState('')
 
-  function handleSubmit(newPokemonName) {
+  function handleSubmit(newPokemonName: string) {
     setPokemonName(newPokemonName)
   }
 
@@ -103,23 +133,4 @@ function App() {
     </div>
   )
 }
-
-function AppWithUnmountCheckbox() {
-  const [mountApp, setMountApp] = React.useState(true)
-  return (
-    <div>
-      <label>
-        <input
-          type="checkbox"
-          checked={mountApp}
-          onChange={e => setMountApp(e.target.checked)}
-        />{' '}
-        Mount Component
-      </label>
-      <hr />
-      {mountApp ? <App /> : null}
-    </div>
-  )
-}
-
-export default AppWithUnmountCheckbox
+export default App

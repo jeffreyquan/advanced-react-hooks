@@ -15,7 +15,7 @@ const formatDate = (date: Date) =>
  */
 async function fetchPokemon(
   name: string,
-  delay: number = 1500,
+  {signal, delay = 1500}: {signal?: AbortSignal; delay?: number} = {},
 ): Promise<PokemonData> {
   const pokemonQuery = `
     query PokemonInfo($name: String) {
@@ -42,6 +42,7 @@ async function fetchPokemon(
       'content-type': 'application/json;charset=UTF-8',
       delay: String(delay),
     },
+    signal,
     body: JSON.stringify({
       query: pokemonQuery,
       variables: {name: name.toLowerCase()},
@@ -213,7 +214,9 @@ function ErrorFallback({error, resetErrorBoundary}: FallbackProps) {
 }
 
 function PokemonErrorBoundary(
-  props: React.PropsWithChildren<Omit<ErrorBoundaryProps, 'FallbackComponent'>>,
+  props: Pick<ErrorBoundaryProps, 'onReset' | 'resetKeys'> & {
+    children: React.ReactNode
+  },
 ) {
   return <ErrorBoundary FallbackComponent={ErrorFallback} {...props} />
 }

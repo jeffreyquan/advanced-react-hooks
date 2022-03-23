@@ -1,11 +1,11 @@
 // useImperativeHandle: scroll to top/bottom
-// http://localhost:3000/isolated/final/05.js
+// http://localhost:3000/isolated/final/05.tsx
 
 import * as React from 'react'
 
 type MessagesImperativeAPI = {
-  scrollToTop: VoidFunction
-  scrollToBottom: VoidFunction
+  scrollToTop: () => void
+  scrollToBottom: () => void
 }
 
 type Message = {id: string; author: string; content: string}
